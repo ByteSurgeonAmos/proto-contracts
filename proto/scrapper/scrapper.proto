@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package scraper;
+
+option go_package = "github.com/ByteSurgeonAmos/go-auth-stream/proto;proto";
+
+message ScrapeRequest {
+  string url = 1;
+  string request_id = 2; 
+}
+
+message ScrapeResponse {
+  bool success = 1;
+  string company_id = 2; 
+  string error = 3;
+}
+
+message GetCompanyRequest {
+  string company_id = 1;
+}
+
+message CompanyData {
+  string id = 1;
+  string url = 2;
+  string name = 3;
+  string description = 4;
+  string summary = 5;
+  string raw_text = 6;
+  string last_updated = 7; 
+  map<string,string> metadata = 8; 
+}
+
+service Scraper {
+  rpc Scrape (ScrapeRequest) returns (ScrapeResponse);
+  rpc GetCompany (GetCompanyRequest) returns (CompanyData);
+}
