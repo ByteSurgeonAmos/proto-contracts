@@ -1,0 +1,294 @@
+syntax = "proto3";
+
+package agent;
+
+service AgentService {
+  // Generate post with conversation context
+  rpc GeneratePost(GeneratePostRequest) returns (GeneratePostResponse);
+  
+  // Stream post generation with real-time updates
+  rpc GeneratePostStream(GeneratePostRequest) returns (stream PostGenerationEvent);
+  
+  // Get user companies
+  rpc GetUserCompanies(GetUserCompaniesRequest) returns (GetUserCompaniesResponse);
+  
+  // Get company details
+  rpc GetCompanyDetails(GetCompanyDetailsRequest) returns (GetCompanyDetailsResponse);
+}
+
+service ConversationService {
+  // Create new conversation
+  rpc CreateConversation(CreateConversationRequest) returns (ConversationResponse);
+  
+  // Get conversation by ID
+  rpc GetConversation(GetConversationRequest) returns (ConversationResponse);
+  
+  // Get user conversations
+  rpc GetUserConversations(GetUserConversationsRequest) returns (GetUserConversationsResponse);
+  
+  // Add message to conversation
+  rpc AddMessage(AddMessageRequest) returns (ConversationResponse);
+  
+  // Update conversation title
+  rpc UpdateConversationTitle(UpdateConversationTitleRequest) returns (ConversationResponse);
+  
+  // Delete conversation
+  rpc DeleteConversation(DeleteConversationRequest) returns (DeleteConversationResponse);
+}
+
+service UserPreferencesService {
+  // Get user preferences
+  rpc GetUserPreferences(GetUserPreferencesRequest) returns (UserPreferencesResponse);
+  
+  // Update user preferences
+  rpc UpdateUserPreferences(UpdateUserPreferencesRequest) returns (UserPreferencesResponse);
+  
+  // Reset user preferences
+  rpc ResetUserPreferences(ResetUserPreferencesRequest) returns (UserPreferencesResponse);
+}
+
+// Enums
+enum SocialPlatform {
+  TWITTER = 0;
+  INSTAGRAM = 1;
+  FACEBOOK = 2;
+  LINKEDIN = 3;
+}
+
+enum ToneType {
+  PROFESSIONAL = 0;
+  CASUAL = 1;
+  FRIENDLY = 2;
+  AUTHORITATIVE = 3;
+  HUMOROUS = 4;
+  INSPIRATIONAL = 5;
+  WITTY = 6;
+  FUNNY = 7;
+  SARCASTIC = 8;
+  ENTHUSIASTIC = 9;
+  EMPATHETIC = 10;
+  CONFIDENT = 11;
+}
+
+enum StyleType {
+  FORMAL = 0;
+  CONVERSATIONAL = 1;
+  STORYTELLING = 2;
+  EDUCATIONAL = 3;
+  PROMOTIONAL = 4;
+  NEWS = 5;
+}
+
+enum MessageRole {
+  USER = 0;
+  ASSISTANT = 1;
+  SYSTEM = 2;
+}
+
+// Agent Service Messages
+message GeneratePostRequest {
+  string user_id = 1;
+  optional string conversation_id = 2;
+  string platform = 3;
+  optional string company_id = 4;
+  optional string company_url = 5;
+  optional string custom_prompt = 6;
+  optional bool include_company_data = 7;
+}
+
+message GeneratePostResponse {
+  PostGenerationResponse post_response = 1;
+  string conversation_id = 2;
+}
+
+message PostGenerationResponse {
+  string post_id = 1;
+  string content = 2;
+  repeated string hashtags = 3;
+  string platform = 4;
+  PostMetadata metadata = 5;
+}
+
+message PostMetadata {
+  string tone = 1;
+  string style = 2;
+  int64 generation_time = 3;
+  string model = 4;
+  optional bool is_rejection = 5;
+}
+
+message PostGenerationEvent {
+  enum EventType {
+    GENERATION_STARTED = 0;
+    GENERATION_PROGRESS = 1;
+    GENERATION_COMPLETED = 2;
+    GENERATION_ERROR = 3;
+  }
+  
+  EventType type = 1;
+  string user_id = 2;
+  string request_id = 3;
+  optional string data = 4;
+  optional string error = 5;
+  int64 timestamp = 6;
+}
+
+message GetUserCompaniesRequest {
+  string user_id = 1;
+}
+
+message GetUserCompaniesResponse {
+  repeated Company companies = 1;
+}
+
+message GetCompanyDetailsRequest {
+  string user_id = 1;
+  optional string url = 2;
+}
+
+message GetCompanyDetailsResponse {
+  optional Company company = 1;
+  optional string message = 2;
+}
+
+message Company {
+  string id = 1;
+  string user_id = 2;
+  string url = 3;
+  string description = 4;
+  string name = 5;
+  string summary = 6;
+  optional string favicon_url = 7;
+  int64 last_updated = 8;
+  int64 scraped_at = 9;
+  CompanyMetadata metadata = 10;
+}
+
+message CompanyMetadata {
+  optional string keywords = 1;
+  optional string industry = 2;
+  optional string favicon_url = 3;
+}
+
+// Conversation Service Messages
+message CreateConversationRequest {
+  string user_id = 1;
+  optional string title = 2;
+  optional string initial_message = 3;
+  optional string context = 4; // JSON string
+}
+
+message GetConversationRequest {
+  string conversation_id = 1;
+}
+
+message GetUserConversationsRequest {
+  string user_id = 1;
+  optional int32 limit = 2;
+}
+
+message GetUserConversationsResponse {
+  repeated ConversationResponse conversations = 1;
+}
+
+message AddMessageRequest {
+  string conversation_id = 1;
+  string message = 2;
+  optional string metadata = 3; // JSON string
+}
+
+message UpdateConversationTitleRequest {
+  string conversation_id = 1;
+  string title = 2;
+}
+
+message DeleteConversationRequest {
+  string conversation_id = 1;
+}
+
+message DeleteConversationResponse {
+  bool success = 1;
+}
+
+message ConversationResponse {
+  string conversation_id = 1;
+  string user_id = 2;
+  string title = 3;
+  repeated ConversationMessage messages = 4;
+  string context = 5; // JSON string
+  bool is_active = 6;
+  int64 last_message_at = 7;
+  int32 message_count = 8;
+}
+
+message ConversationMessage {
+  MessageRole role = 1;
+  string content = 2;
+  int64 timestamp = 3;
+  optional string metadata = 4; // JSON string
+}
+
+// User Preferences Service Messages
+message GetUserPreferencesRequest {
+  string user_id = 1;
+}
+
+message UpdateUserPreferencesRequest {
+  string user_id = 1;
+  UserPreferences preferences = 2;
+}
+
+message ResetUserPreferencesRequest {
+  string user_id = 1;
+}
+
+message UserPreferencesResponse {
+  UserPreferences preferences = 1;
+}
+
+message UserPreferences {
+  ToneType default_tone = 1;
+  StyleType default_style = 2;
+  repeated string preferred_hashtags = 3;
+  repeated string brand_keywords = 4;
+  PlatformSettings platform_settings = 5;
+  ContentPreferences content_preferences = 6;
+  bool enable_auto_generation = 7;
+  int32 daily_post_limit = 8;
+}
+
+message PlatformSettings {
+  TwitterSettings twitter = 1;
+  InstagramSettings instagram = 2;
+  FacebookSettings facebook = 3;
+  LinkedinSettings linkedin = 4;
+}
+
+message TwitterSettings {
+  optional int32 max_length = 1;
+  optional bool use_hashtags = 2;
+  optional bool include_mentions = 3;
+}
+
+message InstagramSettings {
+  optional bool use_hashtags = 1;
+  optional int32 hashtag_count = 2;
+  optional bool include_emojis = 3;
+}
+
+message FacebookSettings {
+  optional bool include_call_to_action = 1;
+  optional bool use_emojis = 2;
+}
+
+message LinkedinSettings {
+  optional bool professional_tone = 1;
+  optional bool include_industry_terms = 2;
+}
+
+message ContentPreferences {
+  optional string target_audience = 1;
+  repeated string industry_focus = 2;
+  repeated string content_categories = 3;
+  repeated string avoid_topics = 4;
+}
